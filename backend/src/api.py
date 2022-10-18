@@ -71,10 +71,14 @@ def retrieve_drinks_details(authorized):
 
 
 @app.route("/drinks", methods=["POST"])
-@requires_auth('post:drinks')
+@requires_auth('get:drinks')
 def create_drink(authorized):
-    print(authorized)
-    drink = Drink(request.get_json().get("title", None), request.get_json().get("recipe", None))
+    print(request.get_json())
+    drink = Drink(
+        title=request.get_json().get("title", None),
+        recipe=str(request.get_json().get("recipe", None)).replace("\'", "\"")
+    )
+    drink.insert()
     return jsonify({
         "success": True, "drinks": drink.long()
     })
@@ -93,6 +97,27 @@ def create_drink(authorized):
 '''
 
 
+@app.route("/drinks/<drink_id>", methods=["PATCH"])
+@requires_auth('patch:drinks')
+def update_drink(authorized, drink_id):
+    print(drink_id)
+    drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
+
+    if drink is None:
+        abort(404)
+    if request.get_json().get("title", None):
+        drink.title = request.get_json().get("title", None)
+
+    if request.get_json().get("recipe", None):
+        drink.recipe = request.get_json().get("recipe", None)
+
+    drink.update()
+
+    return jsonify({
+        "success": True, "drinks": drink.long()
+    })
+
+
 '''
 @TODO implement endpoint
     DELETE /drinks/<id>
@@ -103,6 +128,21 @@ def create_drink(authorized):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
+
+
+@app.route("/drinks/<int:drink_id>", methods=["DELETE"])
+@requires_auth('delete:drinks')
+def delete_drink(authorized, drink_id):
+    drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
+
+    if drink is None:
+        abort(404)
+
+    drink.delete()
+
+    return jsonify({
+        "success": True, "delete": drink_id
+    })
 
 
 # Error Handling
