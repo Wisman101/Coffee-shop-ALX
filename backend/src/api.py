@@ -71,16 +71,17 @@ def retrieve_drinks_details(authorized):
 
 
 @app.route("/drinks", methods=["POST"])
-@requires_auth('get:drinks')
+@requires_auth('post:drinks')
 def create_drink(authorized):
+    print(json.dumps(request.get_json().get("recipe", None)))
     print(request.get_json())
     drink = Drink(
         title=request.get_json().get("title", None),
-        recipe=str(request.get_json().get("recipe", None)).replace("\'", "\"")
+        recipe=json.dumps(request.get_json().get("recipe", None))
     )
     drink.insert()
     return jsonify({
-        "success": True, "drinks": drink.long()
+        "success": True, "drinks": [drink.long()]
     })
 
 
@@ -109,12 +110,12 @@ def update_drink(authorized, drink_id):
         drink.title = request.get_json().get("title", None)
 
     if request.get_json().get("recipe", None):
-        drink.recipe = request.get_json().get("recipe", None)
+        drink.recipe = json.dumps(request.get_json().get("recipe", None))
 
     drink.update()
 
     return jsonify({
-        "success": True, "drinks": drink.long()
+        "success": True, "drinks": [drink.long()]
     })
 
 
@@ -207,7 +208,8 @@ def unprocessable(error):
         "success": False,
         "error": error.status_code,
         "message": error
-    }), AuthError
+    }), error.status_code
+
 
 if __name__ == "__main__":
     app.debug = True
