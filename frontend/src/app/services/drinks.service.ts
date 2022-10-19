@@ -96,6 +96,7 @@ export class DrinksService {
       .subscribe((res: any) => {
         this.drinksToItems(res.drinks);
         console.log(res);
+        console.log("drinks-details")
       });
     } else {
       this.http.get(this.url + '/drinks', this.getHeaders())
